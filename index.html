@@ -122,6 +122,11 @@ textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba
 .progress-bar{flex:1;height:6px;border-radius:999px;background:var(--track);overflow:hidden;position:relative}
 .progress-bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);border-radius:999px;transition:width .1s}
 kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.drop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1.5px dashed var(--field-line);border-radius:12px;padding:12px}
+.drop.over{border-color:var(--accent);background:rgba(0,122,255,.06)}
+.stage.over .art{outline:3px dashed var(--accent);outline-offset:6px}
+body.src-svg [data-gen]{display:none!important}
+body:not(.src-svg) [data-svg]{display:none!important}
 
 @media (max-width:1000px){
   .app{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;height:auto;min-height:100%;column-gap:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -148,7 +153,18 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
     </div>
   </header>
   <aside class="rail">
-    <div class="chips" id="presets">
+    <div class="seg" id="source" role="radiogroup"></div>
+    <section data-svg id="importSec">
+      <h2>Imported SVG <span class="v" id="impInfo"></span></h2>
+      <div class="drop" id="drop">
+        <input type="file" id="svgFile" accept=".svg,image/svg+xml" hidden>
+        <button class="btn" id="pickSvg">Choose SVG…</button>
+        <span class="hint">or drop a file here or onto the artwork</span>
+      </div>
+      <p class="hint">Every linear gradient in the file drifts along its own axis while the shapes stay put. Works with Figma exports, including this tool's own SVGs. Radial gradients stay still.</p>
+      <div class="btns"><button class="btn" id="clearSvg" hidden>Remove SVG</button></div>
+    </section>
+    <div class="chips" id="presets" data-gen>
       <button class="btn" data-preset="classic">Classic 8</button>
       <button class="btn" data-preset="wrap">Wrapped</button>
       <button class="btn" data-preset="halves">Halves 4</button>
@@ -158,7 +174,7 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
       <button class="btn" data-preset="haze">Haze</button>
     </div>
 
-    <section>
+    <section data-gen>
       <h2>Structure <span class="v" id="leafCount"></span></h2>
       <div class="row"><label>Columns</label>
         <div class="seg" id="base" role="radiogroup"></div></div>
@@ -174,7 +190,7 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
       <p class="hint">Click a column in the artwork to split it in two. Hold <kbd>⇧</kbd> while clicking, or switch to Merge, to join it back. Rebuild resets manual edits.</p>
     </section>
 
-    <section>
+    <section data-gen>
       <h2>Gradient</h2>
       <div class="bar" id="bar"></div>
       <div class="stops" id="stops"></div>
@@ -190,7 +206,7 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
         <div class="seg" id="spread" role="radiogroup"></div></div>
     </section>
 
-    <section>
+    <section data-gen>
       <h2>Per-column variation</h2>
       <div class="row"><label>Shift</label>
         <div class="seg" id="offsetMode" role="radiogroup"></div></div>
@@ -209,7 +225,7 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
       <p class="hint">Shift moves the gradient along its axis per column; Length stretches it so the middle colours take over. Use Click does → Tune to set one column by hand.</p>
     </section>
 
-    <section>
+    <section data-gen>
       <h2>Finish</h2>
       <div class="row"><label for="blur">Soften</label>
         <div class="with-v"><input type="range" id="blur" min="0" max="150" step="1"><span class="v" id="blurV"></span></div></div>
@@ -226,14 +242,14 @@ kbd{font-size:10.5px;background:var(--ctl);padding:1px 6px;border-radius:5px;bor
         <div class="with-v"><input type="range" id="motionAmt" min="0.01" max="0.3" step="0.01"><span class="v" id="motionAmtV"></span></div></div>
       <div class="row"><label for="motionSpeed">Speed</label>
         <div class="with-v"><input type="range" id="motionSpeed" min="0.02" max="0.5" step="0.01"><span class="v" id="motionSpeedV"></span></div></div>
-      <p class="hint">Only the gradients drift; the columns stay put. Still shows the exact frame you export. The SVG carries the motion for browsers; PNG and Figma take the still frame.</p>
+      <p class="hint">Only the gradients drift; the shapes stay put. Still shows the exact frame you export. The SVG carries the motion for browsers; PNG and Figma take the still frame. Shuffle or Randomise re-rolls which gradient drifts first.</p>
     </section>
 
   </aside>
   <aside class="rail side">
     <section>
       <h2>Canvas</h2>
-      <div class="chips" id="ratios">
+      <div class="chips" id="ratios" data-gen>
         <button class="btn" data-ratio="1:1">1:1</button>
         <button class="btn" data-ratio="4:5">4:5</button>
         <button class="btn" data-ratio="9:16">9:16</button>
@@ -296,7 +312,7 @@ const DEFAULTS = {
   stops:[{c:'#C33709',p:0},{c:'#F44A12',p:39},{c:'#FF9447',p:100}],
   angle:0, scale:1, spread:'pad', shape:'linear',
   offsetMode:'random', offsetAmt:0.45, flipMode:'random', lenMode:'none', lenAmt:0.5, seed:3,
-  blur:0, blurMix:1, motion:'off', motionAmt:0.08, motionSpeed:0.1,
+  blur:0, blurMix:1, motion:'off', motionAmt:0.08, motionSpeed:0.1, source:'gen',
   W:1600, H:1600, gap:0, gapColor:'#17171a',
   tree:null, over:{}
 };
@@ -464,6 +480,7 @@ function shapeTag(poly,attrs){
 /* ---------- renderers ---------- */
 /* frameT: when given, the gradient positions for that moment of the drift cycle are baked in (used for video frames) */
 function svgString(forExport, frameT){
+  if(S.source==='svg') return importedSvg(frameT, forExport);
   const lv=leafParams(), rs=rects(lv), stops=effStops();
   const id='sg'+((S.seed*31+S.structSeed)%9973);
   const stopTags=stops.map(s=>`<stop offset="${s.p/100}" stop-color="${s.c}"/>`).join('');
@@ -513,6 +530,7 @@ function svgString(forExport, frameT){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S.W} ${S.H}" width="${S.W}" height="${S.H}"${forExport?'':' shape-rendering="crispEdges"'}>${bg}<defs>${defs}</defs>${content}</svg>`;
 }
 function cssString(){
+  if(S.source==='svg') return '/* CSS export applies to generated gradients only. Use the SVG export for an imported file. */\n';
   const lv=leafParams(); let stops=effStops();
   const pct = v => f(v*100)+'%';
   let out=`.gradient {\n  display: flex;\n  flex-direction: ${S.orient==='v'?'row':'column'};\n  width: ${S.W}px;\n  height: ${S.H}px;\n}\n.gradient > * { flex: 1 1 0; min-width: 0; min-height: 0; }\n`;
@@ -545,6 +563,54 @@ async function pngBlob(){
   } finally { URL.revokeObjectURL(url); }
 }
 
+/* ---------- imported SVG: animate the file's own linear gradients ---------- */
+let IMP=null;
+try{ const r=localStorage.getItem('sgs:import'); if(r){ const o=JSON.parse(r); if(o && o.text) IMP=o; } }catch(e){}
+const SVGNS='http://www.w3.org/2000/svg';
+const fx=v=>String(+v.toFixed(5));
+function num(v,def){ if(v==null) return def; v=String(v).trim(); const n=parseFloat(v); if(isNaN(n)) return def; return v.endsWith('%') ? n/100 : n; }
+/* an attribute, following href references between gradients the way renderers do */
+function gAttr(g,name,doc,depth){
+  depth=depth||0;
+  if(g.hasAttribute(name)) return g.getAttribute(name);
+  if(depth>5) return null;
+  const h=g.getAttribute('href')||g.getAttribute('xlink:href')||g.getAttributeNS('http://www.w3.org/1999/xlink','href');
+  if(h && h.charAt(0)==='#'){ const t=doc.getElementById(h.slice(1)); if(t) return gAttr(t,name,doc,depth+1); }
+  return null;
+}
+function sanitizeSvg(doc){
+  doc.querySelectorAll('script,foreignObject,iframe,object,embed,audio,video').forEach(e=>e.remove());
+  doc.querySelectorAll('*').forEach(el=>{ Array.from(el.attributes).forEach(a=>{ const n=a.name.toLowerCase();
+    if(n.indexOf('on')===0 || ((n==='href'||n==='xlink:href') && /^\s*(javascript|vbscript|data:text\/html)/i.test(a.value))) el.removeAttribute(a.name); }); });
+}
+function importedSvg(frameT,forExport){
+  if(!IMP) return `<svg xmlns="${SVGNS}" viewBox="0 0 ${S.W} ${S.H}" width="${S.W}" height="${S.H}"><rect width="${S.W}" height="${S.H}" fill="#e9e9ec"/></svg>`;
+  const doc=new DOMParser().parseFromString(IMP.text,'image/svg+xml');
+  const root=doc.documentElement;
+  root.setAttribute('width',S.W); root.setAttribute('height',S.H);
+  if(frameT!=null || S.motion==='on') Array.from(root.querySelectorAll('linearGradient')).forEach((g,i)=>{
+    const x1=num(gAttr(g,'x1',doc),0), y1=num(gAttr(g,'y1',doc),0), x2=num(gAttr(g,'x2',doc),1), y2=num(gAttr(g,'y2',doc),0);
+    let T=Math.hypot(x2-x1,y2-y1); if(T<1e-9) T=1e-9;
+    const dx=(x2-x1)/T, dy=(y2-y1)/T, base=(gAttr(g,'gradientTransform',doc)||'').trim(), ph=rnd(S.seed,'imp:'+i);
+    if(frameT!=null){
+      const s=Math.sin(2*Math.PI*(frameT*S.motionSpeed+ph))*S.motionAmt*T;
+      g.setAttribute('gradientTransform',(base+' translate('+fx(dx*s)+' '+fx(dy*s)+')').trim());
+    } else if(forExport){
+      const a=S.motionAmt*T, dur=1/S.motionSpeed;
+      const an=doc.createElementNS(SVGNS,'animateTransform');
+      const attrs={attributeName:'gradientTransform',type:'translate',additive:'sum',
+        values:`0 0;${fx(dx*a)} ${fx(dy*a)};0 0;${fx(-dx*a)} ${fx(-dy*a)};0 0`,dur:f(dur)+'s',begin:f(-ph*dur)+'s',
+        repeatCount:'indefinite',calcMode:'spline',keySplines:'0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1'};
+      Object.keys(attrs).forEach(k=>an.setAttribute(k,attrs[k]));
+      g.appendChild(an);
+    } else {
+      g.setAttribute('data-dx',fx(dx)); g.setAttribute('data-dy',fx(dy)); g.setAttribute('data-t',String(T));
+      g.setAttribute('data-ph',ph.toFixed(5)); g.setAttribute('data-base',base);
+    }
+  });
+  return new XMLSerializer().serializeToString(root);
+}
+
 /* ---------- UI plumbing ---------- */
 let selected=null; // path of column being tuned
 /* motion: each gradient slides along its own axis by a sine of time; the shapes never move */
@@ -556,7 +622,8 @@ function animate(now){
   const t=(now-animStart)/1000;
   document.querySelectorAll('#art linearGradient[data-t]').forEach(g=>{
     const s=Math.sin(2*Math.PI*(t*S.motionSpeed+parseFloat(g.dataset.ph)))*S.motionAmt*parseFloat(g.dataset.t);
-    g.setAttribute('gradientTransform',`translate(${(parseFloat(g.dataset.dx)*s).toFixed(2)} ${(parseFloat(g.dataset.dy)*s).toFixed(2)})`);
+    const base=g.dataset.base||'';
+    g.setAttribute('gradientTransform',(base+' translate('+fx(parseFloat(g.dataset.dx)*s)+' '+fx(parseFloat(g.dataset.dy)*s)+')').trim());
   });
   raf=requestAnimationFrame(animate);
 }
@@ -579,8 +646,12 @@ function render(){
   const art=$('#art');
   art.className='art '+S.mode;
   art.innerHTML=svgString(false);
+  document.body.classList.toggle('src-svg', S.source==='svg');
+  $('#impInfo').textContent = IMP ? `${IMP.name} · ${IMP.nLin} gradient${IMP.nLin===1?'':'s'}` : '';
+  $('#clearSvg').hidden=!IMP;
   const lv=leafParams();
   $('#leafCount').textContent= lv.length===S.base ? '' : lv.length+' after edits';
+  if(S.source==='svg') selected=null;
   if(selected){
     const l=lv.find(x=>x.path===selected);
     if(!l){ selected=null; $('#tune').hidden=true; }
@@ -598,7 +669,8 @@ function render(){
       $('#tune').hidden=false;
     }
   }
-  $('#stageHint').textContent = S.mode==='split' ? 'Click a column to split it · shift-click to merge'
+  $('#stageHint').textContent = S.source==='svg' ? (IMP ? 'Drop another SVG onto the artwork to replace it' : 'Drop an SVG file onto the artwork')
+    : S.mode==='split' ? 'Click a column to split it · shift-click to merge'
     : S.mode==='merge' ? 'Click a column to merge it with its sibling' : 'Click a column to tune its shift and flip';
   $('#bar').style.background=`linear-gradient(90deg, ${effStops().map(s=>s.c+' '+f(s.p)+'%').join(', ')})`;
   if($('#code').classList.contains('open')) updateCode();
@@ -682,7 +754,10 @@ function start(hot){
   if(S.base===32) S.base=16;
   if(![4,8,16].includes(S.base)){ S.base=8; S.tree=null; }
   if(!(S.depth>=1)){ S.depth=2; S.tree=null; }
+  if(!S.source) S.source='gen';
+  if(S.source==='svg' && !IMP) S.source='gen';
   if(!S.tree) S.tree=buildTree();
+  let curSrc=S.source;
   try{ window.claude?.hot?.snapshot(()=>S); }catch(e){}
 
   seg('base',[[4,'4'],[8,'8'],[16,'16']],'base',rebuild);
@@ -721,8 +796,58 @@ function start(hot){
   const W=$('#W'), H=$('#H');
   const dimSync=()=>{ W.value=S.W; H.value=S.H; };
   dimSync();
-  W.addEventListener('change',()=>{ const v=parseInt(W.value,10); if(v>=16&&v<=8000){ S.W=v; render(); } else dimSync(); });
-  H.addEventListener('change',()=>{ const v=parseInt(H.value,10); if(v>=16&&v<=8000){ S.H=v; render(); } else dimSync(); });
+  W.addEventListener('change',()=>{ const v=parseInt(W.value,10); if(v>=16&&v<=8000){ S.W=v; if(S.source==='svg' && IMP) S.H=Math.max(2,Math.round(v*IMP.vh/IMP.vw)); dimSync(); render(); } else dimSync(); });
+  H.addEventListener('change',()=>{ const v=parseInt(H.value,10); if(v>=16&&v<=8000){ S.H=v; if(S.source==='svg' && IMP) S.W=Math.max(2,Math.round(v*IMP.vw/IMP.vh)); dimSync(); render(); } else dimSync(); });
+
+  /* imported SVG: source switch, file picking, drag and drop */
+  function applySource(){
+    if(S.source==='svg' && curSrc!=='svg'){ S.genW=S.W; S.genH=S.H; if(IMP){ S.W=IMP.pw; S.H=IMP.ph; } }
+    if(S.source==='gen' && curSrc!=='gen' && S.genW){ S.W=S.genW; S.H=S.genH; }
+    curSrc=S.source; dimSync(); render();
+  }
+  seg('source',[['gen','Generated'],['svg','Imported SVG']],'source',applySource);
+  function importSvgText(text,name){
+    const doc=new DOMParser().parseFromString(text,'image/svg+xml');
+    if(doc.querySelector('parsererror') || !doc.documentElement || doc.documentElement.localName!=='svg'){ toast('That file is not a valid SVG'); return; }
+    sanitizeSvg(doc);
+    const root=doc.documentElement;
+    root.setAttribute('xmlns',SVGNS);
+    /* prefix every id so the file's ids cannot collide with the page's own elements (a gradient called "base" would otherwise resolve to a control) */
+    const ids=Array.from(root.querySelectorAll('[id]')).map(e=>e.getAttribute('id')).filter(Boolean);
+    if(ids.length){
+      const set=new Set(ids);
+      const re=new RegExp('#('+ids.map(s=>s.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')).join('|')+')(?=[)"\'\\s]|$)','g');
+      const fix=v=>v.replace(re,(m,id)=>set.has(id)?'#imp-'+id:m);
+      root.querySelectorAll('[id]').forEach(e=>e.setAttribute('id','imp-'+e.getAttribute('id')));
+      root.querySelectorAll('*').forEach(el=>{ Array.from(el.attributes).forEach(a=>{ if(a.value.indexOf('#')>=0) el.setAttribute(a.name,fix(a.value)); }); if(el.localName==='style' && el.textContent.indexOf('#')>=0) el.textContent=fix(el.textContent); });
+    }
+    const vb=(root.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
+    let vw,vh;
+    if(vb.length===4 && vb.every(n=>!isNaN(n)) && vb[2]>0 && vb[3]>0){ vw=vb[2]; vh=vb[3]; }
+    else { vw=parseFloat(root.getAttribute('width'))||1000; vh=parseFloat(root.getAttribute('height'))||vw; root.setAttribute('viewBox',`0 0 ${vw} ${vh}`); }
+    const nLin=root.querySelectorAll('linearGradient').length, nRad=root.querySelectorAll('radialGradient').length;
+    const sc=Math.min(1,2048/Math.max(vw,vh));
+    const pw=Math.max(2,Math.round(vw*sc/2)*2), ph=Math.max(2,Math.round(vh*sc/2)*2);
+    IMP={text:new XMLSerializer().serializeToString(root),name:name||'import.svg',vw,vh,pw,ph,nLin,nRad};
+    try{ localStorage.setItem('sgs:import',JSON.stringify(IMP)); }catch(e){}
+    S.motion='on'; syncSeg('motion','motion');
+    if(S.source==='svg'){ S.W=pw; S.H=ph; dimSync(); render(); }
+    else { S.source='svg'; syncSeg('source','source'); applySource(); }
+    toast(nLin ? `${nLin} linear gradient${nLin===1?'':'s'} found` : (nRad ? 'Only radial gradients found; they stay still' : 'No linear gradients found in this file'));
+  }
+  function readSvgFile(file){
+    if(!file) return;
+    if(!/\.svg$/i.test(file.name) && file.type!=='image/svg+xml'){ toast('Please choose an SVG file'); return; }
+    const r=new FileReader(); r.onload=()=>importSvgText(String(r.result),file.name); r.readAsText(file);
+  }
+  $('#pickSvg').addEventListener('click',()=>$('#svgFile').click());
+  $('#svgFile').addEventListener('change',()=>{ readSvgFile($('#svgFile').files[0]); $('#svgFile').value=''; });
+  $('#clearSvg').addEventListener('click',()=>{ IMP=null; try{ localStorage.removeItem('sgs:import'); }catch(e){} S.source='gen'; syncSeg('source','source'); applySource(); });
+  [$('#drop'),document.querySelector('.stage')].forEach(z=>{
+    z.addEventListener('dragover',e=>{ e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave',()=>z.classList.remove('over'));
+    z.addEventListener('drop',e=>{ e.preventDefault(); z.classList.remove('over'); readSvgFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
+  });
   $('#ratios').addEventListener('click',e=>{
     const b=e.target.closest('[data-ratio]'); if(!b) return;
     const [a,c]=b.dataset.ratio.split(':').map(Number); const base=Math.max(S.W,S.H);
@@ -737,7 +862,7 @@ function start(hot){
     const standalone=!window.claude;
     if(!dl && !standalone) return;
     $('#dlRow').hidden=false;
-    const fname=ext=>'split-gradient-'+S.W+'x'+S.H+'.'+ext;
+    const fname=ext=> (S.source==='svg' && IMP) ? IMP.name.replace(/\.svg$/i,'')+'-motion.'+ext : 'split-gradient-'+S.W+'x'+S.H+'.'+ext;
     async function offer(filename,data){
       if(dl){
         try{ await dl.save({filename,data}); toast('Saved '+filename); }
@@ -842,7 +967,9 @@ function start(hot){
 
   /* every control re-read from the state, after a preset, undo or randomise */
   function syncAll(){
-    ['base','rule','mode','spread','shape','offsetMode','flipMode','lenMode','motion'].forEach(k=>syncSeg(k,k));
+    ['source','base','rule','mode','spread','shape','offsetMode','flipMode','lenMode','motion'].forEach(k=>syncSeg(k,k));
+    if(S.source==='svg' && !IMP) S.source='gen';
+    curSrc=S.source;
     depthSync(); scaleSync(); offSync(); lenAmtSync(); blurSync(); blurMixSync(); motionAmtSync(); motionSpeedSync(); dimSync(); renderStops();
   }
   function back(){
@@ -859,6 +986,7 @@ function start(hot){
   });
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   $('#randomise').addEventListener('click',()=>{
+    if(S.source==='svg'){ S.seed=Math.floor(Math.random()*100000); render(); return; }
     S.base=pick([4,8,8,8,16]); S.depth=pick([2,2,3,3,4]); S.rule=pick(['right','right','random','random','alt','left']);
     S.structSeed=Math.floor(Math.random()*100000); S.seed=Math.floor(Math.random()*100000);
     S.spread=pick(['pad','pad','pad','repeat','reflect']); S.shape=pick(['linear','linear','symmetric']);

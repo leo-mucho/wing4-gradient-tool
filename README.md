@@ -32,6 +32,7 @@ Open `index.html` in a browser, or serve the folder with any static server.
 - **Gradient** holds the colour stops. **Symmetric** folds them so the ends share one colour and the middle another.
 - **Per-column variation** shifts, flips and stretches the gradient per column. **Shuffle** re-rolls those; **Rebuild structure** re-rolls the columns; **Randomise** does both.
 - **Finish** overlays a blurred copy. **Motion** makes the gradients drift while the shapes stay put.
+- **Imported SVG** (the switch at the top of the panel) animates any SVG you choose or drop onto the artwork: every linear gradient in the file drifts along its own axis, the shapes stay as they are, and SVG, PNG and MP4 export work on it. Figma exports and this tool's own SVGs both work; radial gradients stay still.
 - **Export**: Download SVG for Figma (one editable gradient per column), Download PNG, or Download MP4 loop for one full drift cycle at 30 fps. Copy buttons put the same code on the clipboard.
 
 ## Browser notes
